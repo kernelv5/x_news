@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: enewspaper-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+        - MONGODB_URL=mongodb://192.168.128.141:27017
+        - MONGODB_DB=eNews
+        - TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAAE9F7gEAAAAA%2Fq2DeNWTyeeqUhriXmU%2BSD2DOLY%3DYObtPfwmmR5xnsBLFXcnCMhQKOtlna3vLgkkCD4TKvEl2C81tg
+    networks:
+      - enewspaper-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: enewspaper-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+        - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+        - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - enewspaper-network
+
+networks:
+  enewspaper-network:
+    driver: bridge
